@@ -434,6 +434,45 @@ namespace LibGit2Sharp.Tests
             }
         }
 
+        [Fact]
+        public void CanCreateACommitWithASpecifiedEncoding()
+        {
+            string path = CloneBareTestRepo();
+            using (var repo = new Repository(path))
+            {
+                Commit c = repo.ObjectDatabase.CreateCommit(
+                    "Eb see Dick", Constants.Signature, Constants.Signature,
+                    repo.Head.Tip.Tree, Enumerable.Empty<Commit>(), "IBM500");
+
+                Assert.Equal("IBM500", c.Encoding);
+            }
+        }
+
+        [Fact]
+        public void CreatingACommitWithoutSpecifyingAnEncodingDefaultsToUft8()
+        {
+            string path = CloneBareTestRepo();
+            using (var repo = new Repository(path))
+            {
+                Commit c = repo.ObjectDatabase.CreateCommit(
+                    "Eb seed ick \uD83D\uDCA9", Constants.Signature, Constants.Signature,
+                    repo.Head.Tip.Tree, Enumerable.Empty<Commit>());
+
+                Assert.Equal("UTF-8", c.Encoding);
+            }
+        }
+
+        [Fact]
+        public void CreatingACommitWithASpecifiedEncodingCannotHandleTheContentThrows()
+        {
+            using (var repo = new Repository(BareTestRepoPath))
+            {
+                Assert.Throws<EncoderFallbackException>(() => repo.ObjectDatabase.CreateCommit(
+                    "Eb seed ick \uD83D\uDCA9", Constants.Signature, Constants.Signature,
+                    repo.Head.Tip.Tree, Enumerable.Empty<Commit>(), "IBM500"));
+            }
+        }
+
         [Theory]
         [InlineData("\0Leading zero")]
         [InlineData("Trailing zero\0")]

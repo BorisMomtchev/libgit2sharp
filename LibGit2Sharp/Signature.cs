@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using LibGit2Sharp.Core;
 using LibGit2Sharp.Core.Handles;
 
@@ -17,13 +18,13 @@ namespace LibGit2Sharp
         private static readonly LambdaEqualityHelper<Signature> equalityHelper =
             new LambdaEqualityHelper<Signature>(x => x.Name, x => x.Email, x => x.When);
 
-        internal Signature(IntPtr signaturePtr)
+        internal Signature(IntPtr signaturePtr, Encoding encoding)
         {
             var handle = new GitSignature();
             Marshal.PtrToStructure(signaturePtr, handle);
 
-            name = StrictUtf8Marshaler.FromNative(handle.Name);
-            email = StrictUtf8Marshaler.FromNative(handle.Email);
+            name = EncodingMarshaler.FromNative(encoding, handle.Name);
+            email = EncodingMarshaler.FromNative(encoding, handle.Email);
             when = Epoch.ToDateTimeOffset(handle.When.Time, handle.When.Offset);
         }
 
@@ -45,9 +46,9 @@ namespace LibGit2Sharp
             this.when = when;
         }
 
-        internal SignatureSafeHandle BuildHandle()
+        internal SignatureSafeHandle BuildHandle(Encoding encoding)
         {
-            return Proxy.git_signature_new(name, email, when);
+            return Proxy.git_signature_new(name, email, encoding, when);
         }
 
         /// <summary>

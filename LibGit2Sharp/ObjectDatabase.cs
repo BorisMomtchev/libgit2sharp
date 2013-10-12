@@ -189,13 +189,21 @@ namespace LibGit2Sharp
         /// <param name="committer">The <see cref="Signature"/> of who added the change to the repository.</param>
         /// <param name="tree">The <see cref="Tree"/> of the <see cref="Commit"/> to be created.</param>
         /// <param name="parents">The parents of the <see cref="Commit"/> to be created.</param>
+        /// <param name="encoding">The commit header encoding. Will default to UTF-8 if unspecified.</param>
         /// <returns>The created <see cref="Commit"/>.</returns>
-        public virtual Commit CreateCommit(string message, Signature author, Signature committer, Tree tree, IEnumerable<Commit> parents)
+        public virtual Commit CreateCommit(string message, Signature author, Signature committer, Tree tree, IEnumerable<Commit> parents, string encoding = null)
         {
-            return CreateCommit(message, author, committer, tree, parents, null);
+            return CreateCommit(message, author, committer, tree, parents, null, encoding);
         }
 
-        internal Commit CreateCommit(string message, Signature author, Signature committer, Tree tree, IEnumerable<Commit> parents, string referenceName)
+        internal Commit CreateCommit(
+            string message,
+            Signature author,
+            Signature committer,
+            Tree tree,
+            IEnumerable<Commit> parents,
+            string referenceName,
+            string encoding)
         {
             Ensure.ArgumentNotNull(message, "message");
             Ensure.ArgumentDoesNotContainZeroByte(message, "message");
@@ -207,7 +215,9 @@ namespace LibGit2Sharp
             string prettifiedMessage = Proxy.git_message_prettify(message);
             GitOid[] parentIds = parents.Select(p => p.Id.Oid).ToArray();
 
-            ObjectId commitId = Proxy.git_commit_create(repo.Handle, referenceName, author, committer, prettifiedMessage, tree, parentIds);
+            ObjectId commitId = Proxy.git_commit_create(
+                repo.Handle, referenceName, author, committer,
+                encoding, prettifiedMessage, tree, parentIds);
 
             return repo.Lookup<Commit>(commitId);
         }

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using LibGit2Sharp.Core.Compat;
 using LibGit2Sharp.Core.Handles;
@@ -234,14 +235,18 @@ namespace LibGit2Sharp.Core
 
         #region git_commit_
 
-        public static Signature git_commit_author(GitObjectSafeHandle obj)
+        public static Signature git_commit_author(GitObjectSafeHandle obj, string encodingCode)
         {
-            return new Signature(NativeMethods.git_commit_author(obj));
+            Encoding encoding = FindStrictEncoding(encodingCode);
+
+            return new Signature(NativeMethods.git_commit_author(obj), encoding);
         }
 
-        public static Signature git_commit_committer(GitObjectSafeHandle obj)
+        public static Signature git_commit_committer(GitObjectSafeHandle obj, string encodingCode)
         {
-            return new Signature(NativeMethods.git_commit_committer(obj));
+            Encoding encoding = FindStrictEncoding(encodingCode);
+
+            return new Signature(NativeMethods.git_commit_committer(obj), encoding);
         }
 
         public static ObjectId git_commit_create(
@@ -249,33 +254,50 @@ namespace LibGit2Sharp.Core
             string referenceName,
             Signature author,
             Signature committer,
+            string encodingCode,
             string prettifiedMessage,
             Tree tree,
             GitOid[] parentIds)
         {
+            Encoding encoding = FindStrictEncoding(encodingCode);
+
             using (ThreadAffinity())
-            using (SignatureSafeHandle authorHandle = author.BuildHandle())
-            using (SignatureSafeHandle committerHandle = committer.BuildHandle())
+            using (SignatureSafeHandle authorHandle = author.BuildHandle(encoding))
+            using (SignatureSafeHandle committerHandle = committer.BuildHandle(encoding))
             using (var parentPtrs = new ArrayMarshaler<GitOid>(parentIds))
             {
                 GitOid commitOid;
 
                 var treeOid = tree.Id.Oid;
 
-                int res = NativeMethods.git_commit_create_from_oids(
-                    out commitOid, repo, referenceName, authorHandle,
-                    committerHandle, null, prettifiedMessage,
-                    ref treeOid, parentPtrs.Count, parentPtrs.ToArray());
+                IntPtr pMessage = IntPtr.Zero;
 
-                Ensure.ZeroResult(res);
+                try
+                {
+                    pMessage = EncodingMarshaler.FromManaged(encoding, prettifiedMessage);
+
+                    int res = NativeMethods.git_commit_create_from_oids(
+                        out commitOid, repo, referenceName, authorHandle,
+                        committerHandle, encodingCode, pMessage,
+                        ref treeOid, parentPtrs.Count, parentPtrs.ToArray());
+
+                    Ensure.ZeroResult(res);
+                }
+                finally
+                {
+                    EncodingMarshaler.Cleanup(pMessage);
+                }
 
                 return commitOid;
             }
         }
 
-        public static string git_commit_message(GitObjectSafeHandle obj)
+        public static string git_commit_message(GitObjectSafeHandle obj, string encodingCode)
         {
-            return NativeMethods.git_commit_message(obj);
+            Encoding encoding = FindStrictEncoding(encodingCode);
+
+            IntPtr pMessage = NativeMethods.git_commit_message(obj);
+            return EncodingMarshaler.FromNative(encoding, pMessage);
         }
 
         public static string git_commit_message_encoding(GitObjectSafeHandle obj)
@@ -873,8 +895,8 @@ namespace LibGit2Sharp.Core
             bool force)
         {
             using (ThreadAffinity())
-            using (SignatureSafeHandle authorHandle = author.BuildHandle())
-            using (SignatureSafeHandle committerHandle = committer.BuildHandle())
+            using (SignatureSafeHandle authorHandle = author.BuildHandle(StrictUtf8Marshaler.Encoding))
+            using (SignatureSafeHandle committerHandle = committer.BuildHandle(StrictUtf8Marshaler.Encoding))
             {
                 GitOid noteOid;
                 GitOid oid = targetId.Oid;
@@ -942,8 +964,8 @@ namespace LibGit2Sharp.Core
         public static void git_note_remove(RepositorySafeHandle repo, string notes_ref, Signature author, Signature committer, ObjectId targetId)
         {
             using (ThreadAffinity())
-            using (SignatureSafeHandle authorHandle = author.BuildHandle())
-            using (SignatureSafeHandle committerHandle = committer.BuildHandle())
+            using (SignatureSafeHandle authorHandle = author.BuildHandle(StrictUtf8Marshaler.Encoding))
+            using (SignatureSafeHandle committerHandle = committer.BuildHandle(StrictUtf8Marshaler.Encoding))
             {
                 GitOid oid = targetId.Oid;
 
@@ -1329,7 +1351,9 @@ namespace LibGit2Sharp.Core
 
         public static Signature git_reflog_entry_committer(SafeHandle entry)
         {
-            return new Signature(NativeMethods.git_reflog_entry_committer(entry));
+            Encoding encoding = FindStrictEncoding(null);
+
+            return new Signature(NativeMethods.git_reflog_entry_committer(entry), encoding);
         }
 
         public static string git_reflog_entry_message(SafeHandle entry)
@@ -1340,7 +1364,8 @@ namespace LibGit2Sharp.Core
         public static void git_reflog_append(ReflogSafeHandle reflog, ObjectId commit_id, Signature committer, string message)
         {
             using (ThreadAffinity())
-            using (SignatureSafeHandle committerHandle = committer.BuildHandle())
+            // TODO: Honor i18n.logoutputencoding
+            using (SignatureSafeHandle committerHandle = committer.BuildHandle(StrictUtf8Marshaler.Encoding))
             {
                 var oid = commit_id.Oid;
 
@@ -1878,14 +1903,29 @@ namespace LibGit2Sharp.Core
             NativeMethods.git_signature_free(signature);
         }
 
-        public static SignatureSafeHandle git_signature_new(string name, string email, DateTimeOffset when)
+        public static SignatureSafeHandle git_signature_new(string name, string email, Encoding encoding, DateTimeOffset when)
         {
             using (ThreadAffinity())
             {
                 SignatureSafeHandle handle;
-                int res = NativeMethods.git_signature_new(out handle, name, email, when.ToSecondsSinceEpoch(),
+
+                IntPtr pName = IntPtr.Zero;
+                IntPtr pEmail = IntPtr.Zero;
+
+                try
+                {
+                    pName = EncodingMarshaler.FromManaged(encoding, name);
+                    pEmail = EncodingMarshaler.FromManaged(encoding, email);
+
+                    int res = NativeMethods.git_signature_new(out handle, pName, pEmail, when.ToSecondsSinceEpoch(),
                                                           (int)when.Offset.TotalMinutes);
-                Ensure.ZeroResult(res);
+                    Ensure.ZeroResult(res);
+                }
+                finally
+                {
+                    EncodingMarshaler.Cleanup(pName);
+                    EncodingMarshaler.Cleanup(pEmail);
+                }
 
                 return handle;
             }
@@ -1902,7 +1942,7 @@ namespace LibGit2Sharp.Core
             StashModifiers options)
         {
             using (ThreadAffinity())
-            using (SignatureSafeHandle stasherHandle = stasher.BuildHandle())
+            using (SignatureSafeHandle stasherHandle = stasher.BuildHandle(StrictUtf8Marshaler.Encoding))
             {
                 GitOid stashOid;
 
@@ -2097,7 +2137,7 @@ namespace LibGit2Sharp.Core
         {
             using (ThreadAffinity())
             using (var objectPtr = new ObjectSafeWrapper(target.Id, repo))
-            using (SignatureSafeHandle taggerHandle = tagger.BuildHandle())
+            using (SignatureSafeHandle taggerHandle = tagger.BuildHandle(StrictUtf8Marshaler.Encoding))
             {
                 GitOid oid;
                 int res = NativeMethods.git_tag_annotation_create(out oid, repo, name, objectPtr.ObjectPtr, taggerHandle, message);
@@ -2117,7 +2157,7 @@ namespace LibGit2Sharp.Core
         {
             using (ThreadAffinity())
             using (var objectPtr = new ObjectSafeWrapper(target.Id, repo))
-            using (SignatureSafeHandle taggerHandle = tagger.BuildHandle())
+            using (SignatureSafeHandle taggerHandle = tagger.BuildHandle(StrictUtf8Marshaler.Encoding))
             {
                 GitOid oid;
                 int res = NativeMethods.git_tag_create(out oid, repo, name, objectPtr.ObjectPtr, taggerHandle, message, allowOverwrite);
@@ -2173,7 +2213,9 @@ namespace LibGit2Sharp.Core
 
         public static Signature git_tag_tagger(GitObjectSafeHandle tag)
         {
-            return new Signature(NativeMethods.git_tag_tagger(tag));
+            Encoding encoding = FindStrictEncoding(null);
+
+            return new Signature(NativeMethods.git_tag_tagger(tag), encoding);
         }
 
         public static ObjectId git_tag_target_oid(GitObjectSafeHandle tag)
@@ -2480,6 +2522,17 @@ namespace LibGit2Sharp.Core
             { typeof(bool), value => git_config_parse_bool(value) },
             { typeof(string), value => value },
         };
+
+        private static Encoding FindStrictEncoding(string encodingCode)
+        {
+            if (encodingCode == null)
+            {
+                return StrictUtf8Marshaler.Encoding;
+            }
+
+            return Encoding.GetEncoding(
+                encodingCode, new EncoderExceptionFallback(), new DecoderExceptionFallback());
+        }
     }
 }
 // ReSharper restore InconsistentNaming

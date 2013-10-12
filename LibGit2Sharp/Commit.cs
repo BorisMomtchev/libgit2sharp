@@ -37,12 +37,12 @@ namespace LibGit2Sharp
             : base(repo, id)
         {
             lazyTree = GitObjectLazyGroup.Singleton(this.repo, id, obj => new Tree(this.repo, Proxy.git_commit_tree_oid(obj), null));
+            lazyEncoding = GitObjectLazyGroup.Singleton(this.repo, id, RetrieveEncodingOf);
 
             group = new GitObjectLazyGroup(this.repo, id);
-            lazyAuthor = group.AddLazy(Proxy.git_commit_author);
-            lazyCommitter = group.AddLazy(Proxy.git_commit_committer);
-            lazyMessage = group.AddLazy(Proxy.git_commit_message);
-            lazyEncoding = group.AddLazy(RetrieveEncodingOf);
+            lazyAuthor = group.AddLazy(obj => Proxy.git_commit_author(obj, lazyEncoding.Value));
+            lazyCommitter = group.AddLazy(obj => Proxy.git_commit_committer(obj, lazyEncoding.Value));
+            lazyMessage = group.AddLazy(obj => Proxy.git_commit_message(obj, lazyEncoding.Value));
 
             lazyShortMessage = new Lazy<string>(ExtractShortMessage);
             lazyNotes = new Lazy<IEnumerable<Note>>(() => RetrieveNotesOfCommit(id).ToList());

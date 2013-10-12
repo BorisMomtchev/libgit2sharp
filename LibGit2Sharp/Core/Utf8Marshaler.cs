@@ -60,6 +60,11 @@ namespace LibGit2Sharp.Core
         public StrictUtf8Marshaler() : base(encoding)
         { }
 
+        public static Encoding Encoding
+        {
+            get { return encoding; }
+        }
+
         public static ICustomMarshaler GetInstance(String cookie)
         {
             return staticInstance;
