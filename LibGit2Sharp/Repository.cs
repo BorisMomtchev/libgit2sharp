@@ -869,7 +869,9 @@ namespace LibGit2Sharp
 
             var parents = RetrieveParentsOfTheCommitBeingCreated(amendPreviousCommit);
 
-            Commit result = ObjectDatabase.CreateCommit(message, author, committer, tree, parents, "HEAD", null);
+            var encodingCode = RetrieveCommitEncodingCode();
+
+            Commit result = ObjectDatabase.CreateCommit(message, author, committer, tree, parents, "HEAD", encodingCode);
 
             Proxy.git_repository_merge_cleanup(handle);
 
@@ -877,6 +879,18 @@ namespace LibGit2Sharp
             LogCommit(result, amendPreviousCommit, isHeadOrphaned, parents.Count() > 1);
 
             return result;
+        }
+
+        private string RetrieveCommitEncodingCode()
+        {
+            ConfigurationEntry<string> encodingCodeEntry = Config.Get<string>("i18n.commitEncoding");
+
+            if (encodingCodeEntry == null)
+            {
+                return null;
+            }
+
+            return encodingCodeEntry.Value;
         }
 
         private void LogCommit(Commit commit, bool amendPreviousCommit, bool isHeadOrphaned, bool isMergeCommit)
