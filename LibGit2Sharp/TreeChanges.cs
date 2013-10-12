@@ -75,7 +75,7 @@ namespace LibGit2Sharp
 
         private int PrintCallBack(GitDiffDelta delta, GitDiffRange range, GitDiffLineOrigin lineorigin, IntPtr content, UIntPtr contentlen, IntPtr payload)
         {
-            string formattedoutput = Utf8Marshaler.FromNative(content, (int)contentlen);
+            string formattedoutput = StrictUtf8Marshaler.FromNative(content, (int)contentlen);
             var filePath = FilePathMarshaler.FromNative(delta.NewFile.Path);
 
             fullPatchBuilder.Append(formattedoutput);

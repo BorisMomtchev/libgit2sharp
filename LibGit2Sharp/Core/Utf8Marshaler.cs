@@ -12,11 +12,11 @@ namespace LibGit2Sharp.Core
     /// Use this marshaler for return values, for example:
     /// [return: MarshalAs(UnmanagedType.CustomMarshaler,
     ///                    MarshalCookie = UniqueId.UniqueIdentifier,
-    ///                    MarshalTypeRef = typeof(Utf8NoCleanupMarshaler))]
+    ///                    MarshalTypeRef = typeof(StrictUtf8NoCleanupMarshaler))]
     /// </summary>
-    internal class Utf8NoCleanupMarshaler : Utf8Marshaler
+    internal class StrictUtf8NoCleanupMarshaler : StrictUtf8Marshaler
     {
-        private static readonly Utf8NoCleanupMarshaler staticInstance = new Utf8NoCleanupMarshaler();
+        private static readonly StrictUtf8NoCleanupMarshaler staticInstance = new StrictUtf8NoCleanupMarshaler();
 
         public new static ICustomMarshaler GetInstance(String cookie)
         {
@@ -44,20 +44,20 @@ namespace LibGit2Sharp.Core
     /// internal static extern int git_tag_delete(RepositorySafeHandle repo,
     ///     [MarshalAs(UnmanagedType.CustomMarshaler,
     ///                MarshalCookie = UniqueId.UniqueIdentifier,
-    ///                MarshalTypeRef = typeof(Utf8Marshaler))] String tagName);
+    ///                MarshalTypeRef = typeof(StrictUtf8Marshaler))] String tagName);
     /// </summary>
-    internal class Utf8Marshaler : EncodingMarshaler
+    internal class StrictUtf8Marshaler : EncodingMarshaler
     {
-        private static readonly Utf8Marshaler staticInstance;
+        private static readonly StrictUtf8Marshaler staticInstance;
         private static readonly Encoding encoding;
 
-        static Utf8Marshaler()
+        static StrictUtf8Marshaler()
         {
-            encoding = Encoding.UTF8;
-            staticInstance = new Utf8Marshaler();
+            encoding = new UTF8Encoding(false, true);
+            staticInstance = new StrictUtf8Marshaler();
         }
 
-        public Utf8Marshaler() : base(encoding)
+        public StrictUtf8Marshaler() : base(encoding)
         { }
 
         public static ICustomMarshaler GetInstance(String cookie)

@@ -282,8 +282,8 @@ namespace LibGit2Sharp
             {
                 var entry = (GitConfigEntry)Marshal.PtrToStructure(entryPtr, typeof(GitConfigEntry));
 
-                return new ConfigurationEntry<string>(Utf8Marshaler.FromNative(entry.namePtr),
-                                                      Utf8Marshaler.FromNative(entry.valuePtr),
+                return new ConfigurationEntry<string>(StrictUtf8Marshaler.FromNative(entry.namePtr),
+                                                      StrictUtf8Marshaler.FromNative(entry.valuePtr),
                                                       (ConfigurationLevel)entry.level);
             });
         }

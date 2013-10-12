@@ -104,7 +104,7 @@ namespace LibGit2Sharp
 
             if (onProgress != null)
             {
-                string message = Utf8Marshaler.FromNative(str, len);
+                string message = StrictUtf8Marshaler.FromNative(str, len);
                 onProgress(message);
             }
         }
@@ -126,7 +126,7 @@ namespace LibGit2Sharp
 
             if (onUpdateTips != null)
             {
-                string refName = Utf8Marshaler.FromNative(str);
+                string refName = StrictUtf8Marshaler.FromNative(str);
                 result = onUpdateTips(refName, oldId, newId);
             }
 

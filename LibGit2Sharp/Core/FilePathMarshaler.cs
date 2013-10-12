@@ -45,7 +45,7 @@ namespace LibGit2Sharp.Core
     ///                MarshalCookie = UniqueId.UniqueIdentifier,
     ///                MarshalTypeRef = typeof(FilePathMarshaler))] FilePath indexpath);
     /// </summary>
-    internal class FilePathMarshaler : Utf8Marshaler
+    internal class FilePathMarshaler : StrictUtf8Marshaler
     {
         private static readonly FilePathMarshaler staticInstance = new FilePathMarshaler();
 
@@ -88,7 +88,7 @@ namespace LibGit2Sharp.Core
                 return IntPtr.Zero;
             }
 
-            return Utf8Marshaler.FromManaged(filePath.Posix);
+            return StrictUtf8Marshaler.FromManaged(filePath.Posix);
         }
     }
 }

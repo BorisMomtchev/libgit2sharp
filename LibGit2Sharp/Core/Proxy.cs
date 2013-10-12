@@ -158,7 +158,7 @@ namespace LibGit2Sharp.Core
                 int res = NativeMethods.git_branch_remote_name(buffer, (UIntPtr)buffer.Length, repo, canonical_branch_name);
                 Ensure.Int32Result(res);
 
-                return Utf8Marshaler.Utf8FromBuffer(buffer) ?? string.Empty;
+                return StrictUtf8Marshaler.Utf8FromBuffer(buffer) ?? string.Empty;
             }
         }
 
@@ -182,7 +182,7 @@ namespace LibGit2Sharp.Core
                     buffer, (UIntPtr)buffer.Length, handle, canonicalReferenceName);
                 Ensure.Int32Result(res);
 
-                return Utf8Marshaler.Utf8FromBuffer(buffer);
+                return StrictUtf8Marshaler.Utf8FromBuffer(buffer);
             }
         }
 
@@ -377,8 +377,8 @@ namespace LibGit2Sharp.Core
 
             GitConfigEntry entry = handle.MarshalAsGitConfigEntry();
 
-            return new ConfigurationEntry<T>(Utf8Marshaler.FromNative(entry.namePtr),
-                (T)configurationParser[typeof(T)](Utf8Marshaler.FromNative(entry.valuePtr)),
+            return new ConfigurationEntry<T>(StrictUtf8Marshaler.FromNative(entry.namePtr),
+                (T)configurationParser[typeof(T)](StrictUtf8Marshaler.FromNative(entry.valuePtr)),
                 (ConfigurationLevel)entry.level);
         }
 
@@ -855,7 +855,7 @@ namespace LibGit2Sharp.Core
                 int res = NativeMethods.git_message_prettify(buffer, (UIntPtr)buffer.Length, message, false);
                 Ensure.Int32Result(res);
 
-                return Utf8Marshaler.Utf8FromBuffer(buffer) ?? string.Empty;
+                return StrictUtf8Marshaler.Utf8FromBuffer(buffer) ?? string.Empty;
             }
         }
 
@@ -1368,7 +1368,7 @@ namespace LibGit2Sharp.Core
                 int res = NativeMethods.git_refspec_rtransform(buffer, (UIntPtr)buffer.Length, refSpecPtr, name);
                 Ensure.ZeroResult(res);
 
-                return Utf8Marshaler.Utf8FromBuffer(buffer) ?? string.Empty;
+                return StrictUtf8Marshaler.Utf8FromBuffer(buffer) ?? string.Empty;
             }
         }
 
@@ -1549,7 +1549,7 @@ namespace LibGit2Sharp.Core
                 c => NativeMethods.git_repository_fetchhead_foreach(
                     repo,
                     (IntPtr w, IntPtr x, ref GitOid y, bool z, IntPtr p)
-                        => c(Utf8Marshaler.FromNative(w), Utf8Marshaler.FromNative(x), y, z, p), IntPtr.Zero),
+                        => c(StrictUtf8Marshaler.FromNative(w), StrictUtf8Marshaler.FromNative(x), y, z, p), IntPtr.Zero),
                     GitErrorCode.NotFound);
         }
 
@@ -1647,7 +1647,7 @@ namespace LibGit2Sharp.Core
                     throw new LibGit2SharpException("Repository message file changed as we were reading it");
                 }
 
-                return Utf8Marshaler.Utf8FromBuffer(buf);
+                return StrictUtf8Marshaler.Utf8FromBuffer(buf);
             }
         }
 
@@ -2400,7 +2400,7 @@ namespace LibGit2Sharp.Core
                     var list = new List<string>(numberOfEntries);
                     for (uint i = 0; i < numberOfEntries; i++)
                     {
-                        var name = Utf8Marshaler.FromNative((IntPtr)gitStrArray->strings[i]);
+                        var name = StrictUtf8Marshaler.FromNative((IntPtr)gitStrArray->strings[i]);
                         list.Add(name);
                     }
 
@@ -2439,7 +2439,7 @@ namespace LibGit2Sharp.Core
 
                 Ensure.ZeroResult(result);
 
-                return Utf8Marshaler.Utf8FromBuffer(buffer);
+                return StrictUtf8Marshaler.Utf8FromBuffer(buffer);
             }
         }
 
