@@ -11,11 +11,11 @@ namespace LibGit2Sharp.Core
     /// Use this marshaler for return values, for example:
     /// [return: MarshalAs(UnmanagedType.CustomMarshaler,
     ///                    MarshalCookie = UniqueId.UniqueIdentifier,
-    ///                    MarshalTypeRef = typeof(FilePathNoCleanupMarshaler))]
+    ///                    MarshalTypeRef = typeof(StrictFilePathNoCleanupMarshaler))]
     /// </summary>
-    internal class FilePathNoCleanupMarshaler : FilePathMarshaler
+    internal class StrictFilePathNoCleanupMarshaler : StrictFilePathMarshaler
     {
-        private static readonly FilePathNoCleanupMarshaler staticInstance = new FilePathNoCleanupMarshaler();
+        private static readonly StrictFilePathNoCleanupMarshaler staticInstance = new StrictFilePathNoCleanupMarshaler();
 
         public static new ICustomMarshaler GetInstance(String cookie)
         {
@@ -43,11 +43,11 @@ namespace LibGit2Sharp.Core
     /// internal static extern int git_index_open(out IndexSafeHandle index,
     ///     [MarshalAs(UnmanagedType.CustomMarshaler,
     ///                MarshalCookie = UniqueId.UniqueIdentifier,
-    ///                MarshalTypeRef = typeof(FilePathMarshaler))] FilePath indexpath);
+    ///                MarshalTypeRef = typeof(StrictFilePathMarshaler))] FilePath indexpath);
     /// </summary>
-    internal class FilePathMarshaler : StrictUtf8Marshaler
+    internal class StrictFilePathMarshaler : StrictUtf8Marshaler
     {
-        private static readonly FilePathMarshaler staticInstance = new FilePathMarshaler();
+        private static readonly StrictFilePathMarshaler staticInstance = new StrictFilePathMarshaler();
 
         public new static ICustomMarshaler GetInstance(String cookie)
         {

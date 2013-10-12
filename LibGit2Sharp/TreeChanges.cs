@@ -60,7 +60,7 @@ namespace LibGit2Sharp
 
         private int DataCallback(GitDiffDelta delta, GitDiffRange range, GitDiffLineOrigin lineOrigin, IntPtr content, UIntPtr contentLen, IntPtr payload)
         {
-            var filePath = FilePathMarshaler.FromNative(delta.NewFile.Path);
+            var filePath = StrictFilePathMarshaler.FromNative(delta.NewFile.Path);
 
             AddLineChange(this[filePath], lineOrigin);
 
@@ -76,7 +76,7 @@ namespace LibGit2Sharp
         private int PrintCallBack(GitDiffDelta delta, GitDiffRange range, GitDiffLineOrigin lineorigin, IntPtr content, UIntPtr contentlen, IntPtr payload)
         {
             string formattedoutput = StrictUtf8Marshaler.FromNative(content, (int)contentlen);
-            var filePath = FilePathMarshaler.FromNative(delta.NewFile.Path);
+            var filePath = StrictFilePathMarshaler.FromNative(delta.NewFile.Path);
 
             fullPatchBuilder.Append(formattedoutput);
             this[filePath].AppendToPatch(formattedoutput);
@@ -102,9 +102,9 @@ namespace LibGit2Sharp
 
         private void AddFileChange(GitDiffDelta delta)
         {
-            var newFilePath = FilePathMarshaler.FromNative(delta.NewFile.Path);
+            var newFilePath = StrictFilePathMarshaler.FromNative(delta.NewFile.Path);
 
-            var oldFilePath = FilePathMarshaler.FromNative(delta.OldFile.Path);
+            var oldFilePath = StrictFilePathMarshaler.FromNative(delta.OldFile.Path);
             var newMode = (Mode)delta.NewFile.Mode;
             var oldMode = (Mode)delta.OldFile.Mode;
             var newOid = delta.NewFile.Oid;
