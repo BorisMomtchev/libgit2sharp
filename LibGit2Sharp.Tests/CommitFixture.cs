@@ -899,5 +899,22 @@ namespace LibGit2Sharp.Tests
                 Assert.Equal(message, c.Message);
             }
         }
+
+        [Fact]
+        public void CanCorrectlyParseAnEncodedCommitHeader()
+        {
+            using (var repo = new Repository(StandardTestRepoPath))
+            {
+                var c = repo.Lookup<Commit>("44d6630d4c4917e3eacc3e585bee47e8908efedf");
+
+                Assert.NotNull(c);
+
+                Assert.Equal("windows-1250", c.Encoding);
+
+                const string message = "Message in windows1250 encoding. "
+                    + "\u0105\u0119\u0107\u0142\u00F3\u015b\u017a\u017c\n";
+                Assert.Equal(message, c.Message);
+            }
+        }
     }
 }
